@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wanderlust - Your Travel Guide</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <!-- Custom CSS -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="#">
+                <i class="bi bi-compass"></i> Wanderlust
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="#home">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#about">About</a>
+                    </li>
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link d-flex align-items-center" href="{% url 'core:profile' %}">
+                                {% if user.profile.profile_picture %}
+                                    <img src="{{ user.profile.profile_picture.url }}" alt="Profile" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                                {% else %}
+                                    <i class="bi bi-person-circle me-2"></i>
+                                {% endif %}
+                                {{ user.username }}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-danger" href="{% url 'core:logout' %}">Logout</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'core:login' %}">Login</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+        <div class="container mt-5 pt-5">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Hero Section -->
+    <section id="home" class="hero-section">
+        <div class="container">
+            <div class="row align-items-center min-vh-100 justify-content-center">
+                <div class="col-lg-8 text-center">
+                    <div class="hero-content">
+                        <h1 class="display-3 fw-bold text-white mb-4">
+                            Discover Your Next
+                            <br>
+                            <span class="text-gradient">vibe</span>
+                        </h1>
+                        <p class="lead text-light mb-5">
+                            Explore breathtaking destinations, hidden gems, and unforgettable experiences. 
+                            Your journey starts here.
+                        </p>
+                        <div class="hero-buttons">
+                            <button class="btn btn-primary btn-lg me-3 squircle-btn feature-btn" data-feature="explore">
+                                <i class="bi bi-geo-alt"></i> Explore Nearby
+                            </button>
+                            <button class="btn btn-outline-light btn-lg me-3 squircle-btn feature-btn" data-feature="landmark">
+                                <i class="bi bi-building"></i> Find the Landmark
+                            </button>
+                            <a href="{% url 'core:plan' %}" class="btn btn-outline-light btn-lg squircle-btn">
+                                <i class="bi bi-calendar-check"></i> Plan your Travel
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section py-5">
+        <div class="container">
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="feature-card squircle-card feature-card-clickable" data-feature="explore">
+                        <div class="feature-icon">
+                            <i class="bi bi-geo-alt"></i>
+                        </div>
+                        <h4>Explore Nearby</h4>
+                        <p>Discover landmarks and attractions around your current location with real-time recommendations.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card squircle-card feature-card-clickable" data-feature="landmark">
+                        <div class="feature-icon">
+                            <i class="bi bi-camera"></i>
+                        </div>
+                        <h4>Find Landmark</h4>
+                        <p>Upload an image and our AI will identify the landmark and provide detailed information about it.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card squircle-card feature-card-clickable" data-feature="plan">
+                        <div class="feature-icon">
+                            <i class="bi bi-calendar-check"></i>
+                        </div>
+                        <h4>Plan Your Travel</h4>
+                        <p>View and manage your saved locations to create your perfect travel itinerary.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- About Section -->
+    <section id="about" class="about-section py-5">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-6">
+                    <div class="about-content">
+                        <h2 class="display-5 fw-bold text-white mb-4">About Wanderlust</h2>
+                        <p class="lead text-light mb-4">
+                            We're passionate about making travel discovery effortless and exciting. Our AI-powered platform 
+                            combines cutting-edge technology with local expertise to create unforgettable travel experiences.
+                        </p>
+                        <p class="text-light mb-4">
+                            Whether you're exploring your own city or planning your next international adventure, 
+                            Wanderlust provides the tools and insights you need to discover hidden gems, 
+                            understand local culture, and create memories that last a lifetime.
+                        </p>
+                        <p class="text-light mb-4">
+                            <strong>Creator:</strong> Divyansh Chaudhary, MCS from UIUC
+                        </p>
+                        <div class="about-stats">
+                            <div class="row g-4">
+                                <div class="col-6">
+                                    <div class="stat-item text-center">
+                                        <h3 class="text-gradient fw-bold">10K+</h3>
+                                        <p class="text-light">Landmarks Identified</p>
+                                    </div>
+                                </div>
+                                <div class="col-6">
+                                    <div class="stat-item text-center">
+                                        <h3 class="text-gradient fw-bold">50+</h3>
+                                        <p class="text-light">Cities Covered</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="about-visual">
+                        <div class="about-card squircle-card">
+                            <div class="about-icon">
+                                <i class="bi bi-lightning-charge"></i>
+                            </div>
+                            <h4>AI-Powered Discovery</h4>
+                            <p>Advanced machine learning algorithms help you identify landmarks and get instant information.</p>
+                        </div>
+                        <div class="about-card squircle-card">
+                            <div class="about-icon">
+                                <i class="bi bi-globe"></i>
+                            </div>
+                            <h4>Global Coverage</h4>
+                            <p>From local hidden gems to world-famous landmarks, we've got you covered worldwide.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer py-4">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5 class="text-white mb-3">
+                        <i class="bi bi-compass"></i> Wanderlust
+                    </h5>
+                    <p class="text-light">Your trusted companion for unforgettable travel experiences.</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <div class="social-links">
+                        <a href="https://www.linkedin.com/in/divyansh7c" class="social-link" title="LinkedIn" target="_blank" rel="noopener noreferrer">
+                            <i class="bi bi-linkedin"></i>
+                        </a>
+                        <a href="https://github.com/itsDV7" class="social-link" title="GitHub" target="_blank" rel="noopener noreferrer">
+                            <i class="bi bi-github"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <hr class="my-4">
+            <div class="text-center text-light">
+                <small>&copy; {% now "Y" %} Wanderlust. All rights reserved.</small>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Authentication status for JavaScript -->
+    <script>
+        const isAuthenticated = {% if user.is_authenticated %}true{% else %}false{% endif %};
+        const loginUrl = "{% url 'core:login' %}";
+    </script>
+    
+    <!-- Custom JS -->
+    <script src="{% static 'js/main.js' %}"></script>
+</body>
+</html> 

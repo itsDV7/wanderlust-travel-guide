@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explore Nearby - Wanderlust</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Custom CSS -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'css/explore.css' %}">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{% url 'core:home' %}">
+                <i class="bi bi-compass"></i> Wanderlust
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'core:home' %}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'core:find_landmark' %}">
+                            <i class="bi bi-camera"></i> Find Landmark
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'core:plan' %}">
+                            <i class="bi bi-calendar-check"></i> Plan
+                        </a>
+                    </li>
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link d-flex align-items-center" href="{% url 'core:profile' %}">
+                                {% if user.profile.profile_picture %}
+                                    <img src="{{ user.profile.profile_picture.url }}" alt="Profile" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                                {% else %}
+                                    <i class="bi bi-person-circle me-2"></i>
+                                {% endif %}
+                                {{ user.username }}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-danger" href="{% url 'core:logout' %}">Logout</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'core:login' %}">Login</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Explore Section -->
+    <section class="explore-section">
+        <div class="container-fluid p-0">
+            <div class="row g-0">
+                <!-- Map Column -->
+                <div class="col-lg-8">
+                    <div class="map-container">
+                        <div id="map"></div>
+                        <div class="map-controls">
+                            <button class="btn btn-primary btn-sm" id="getLocationBtn">
+                                <i class="bi bi-geo-alt"></i> Get My Location
+                            </button>
+                            <button class="btn btn-outline-light btn-sm" id="refreshBtn">
+                                <i class="bi bi-arrow-clockwise"></i> Refresh
+                            </button>
+                        </div>
+                        
+                        <!-- Map Legend -->
+                        <div class="map-legend">
+                            <div class="legend-header">
+                                <h6 class="text-white mb-2">Landmark Types</h6>
+                            </div>
+                            <div class="legend-items">
+                                <div class="legend-item">
+                                    <div class="legend-icon" style="background-color: #3b82f6;">
+                                        <i class="bi bi-star-fill"></i>
+                                    </div>
+                                    <span class="legend-text">Tourist Attraction</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-icon" style="background-color: #8b5cf6;">
+                                        <i class="bi bi-building"></i>
+                                    </div>
+                                    <span class="legend-text">Monument</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-icon" style="background-color: #06b6d4;">
+                                        <i class="bi bi-collection"></i>
+                                    </div>
+                                    <span class="legend-text">Museum</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-icon" style="background-color: #10b981;">
+                                        <i class="bi bi-tree-fill"></i>
+                                    </div>
+                                    <span class="legend-text">Park</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-icon" style="background-color: #f59e0b;">
+                                        <i class="bi bi-cup-hot-fill"></i>
+                                    </div>
+                                    <span class="legend-text">Restaurant</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-icon" style="background-color: #ef4444;">
+                                        <i class="bi bi-shop"></i>
+                                    </div>
+                                    <span class="legend-text">Shopping Mall</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Landmarks Panel -->
+                <div class="col-lg-4">
+                    <div class="landmarks-panel">
+                        <div class="panel-header">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h4 class="text-white mb-0">
+                                    <i class="bi bi-geo-alt"></i> Nearby Landmarks
+                                </h4>
+                                <div class="filter-dropdown">
+                                    <select class="form-select form-select-sm" id="landmarkFilter">
+                                        <option value="all">All Types</option>
+                                        <option value="Tourist Attraction">Tourist Attractions</option>
+                                        <option value="Monument">Monuments</option>
+                                        <option value="Museum">Museums</option>
+                                        <option value="Park">Parks</option>
+                                        <option value="Restaurant">Restaurants</option>
+                                        <option value="Shopping Mall">Shopping Malls</option>
+                                        <option value="Landmark">Other Landmarks</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="location-info">
+                                <small class="text-light" id="locationInfo">Getting your location...</small>
+                            </div>
+                        </div>
+                        
+                        <div class="landmarks-list" id="landmarksList">
+                            <div class="loading-placeholder">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <p class="text-light mt-2">Finding landmarks near you...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- Custom JS -->
+    <script src="{% static 'js/explore.js' %}"></script>
+</body>
+</html> 

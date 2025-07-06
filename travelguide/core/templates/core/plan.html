@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plan Your Travel - Wanderlust</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Custom CSS -->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        .plan-section {
+            padding-top: 80px;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .plan-container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 2rem;
+            margin: 2rem 0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .saved-location-card {
+            background: white;
+            border-radius: 15px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border-left: 4px solid #667eea;
+        }
+        
+        .saved-location-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .location-header {
+            display: flex;
+            justify-content: between;
+            align-items: flex-start;
+            margin-bottom: 1rem;
+        }
+        
+        .location-info {
+            flex: 1;
+        }
+        
+        .location-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+        
+        .location-address {
+            color: #718096;
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .location-meta {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        
+        .rating-badge {
+            background: #f7fafc;
+            color: #4a5568;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+        
+        .type-badge {
+            background: #e6fffa;
+            color: #2c7a7b;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+        
+        .location-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        
+        .btn-view-map {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: background 0.3s ease;
+        }
+        
+        .btn-view-map:hover {
+            background: #5a67d8;
+            color: white;
+        }
+        
+        .btn-remove {
+            background: #fed7d7;
+            color: #c53030;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            transition: background 0.3s ease;
+        }
+        
+        .btn-remove:hover {
+            background: #feb2b2;
+            color: #c53030;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 3rem 1rem;
+            color: #718096;
+        }
+        
+        .empty-state i {
+            font-size: 4rem;
+            color: #cbd5e0;
+            margin-bottom: 1rem;
+        }
+        
+        .map-container {
+            height: 400px;
+            border-radius: 15px;
+            overflow: hidden;
+            margin-top: 1rem;
+        }
+        
+        .plan-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .plan-title {
+            color: #2d3748;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .plan-subtitle {
+            color: #718096;
+            font-size: 1.1rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="{% url 'core:home' %}">
+                <i class="bi bi-compass"></i> Wanderlust
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'core:home' %}">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'core:explore_nearby' %}">
+                            <i class="bi bi-geo-alt"></i> Explore Nearby
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'core:find_landmark' %}">
+                            <i class="bi bi-camera"></i> Find Landmark
+                        </a>
+                    </li>
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link d-flex align-items-center" href="{% url 'core:profile' %}">
+                                {% if user.profile.profile_picture %}
+                                    <img src="{{ user.profile.profile_picture.url }}" alt="Profile" class="rounded-circle me-2" style="width: 32px; height: 32px; object-fit: cover;">
+                                {% else %}
+                                    <i class="bi bi-person-circle me-2"></i>
+                                {% endif %}
+                                {{ user.username }}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-danger" href="{% url 'core:logout' %}">Logout</a>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'core:login' %}">Login</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+        <div class="container mt-5 pt-5">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Plan Section -->
+    <section class="plan-section">
+        <div class="container">
+            <div class="plan-container">
+                <div class="plan-header">
+                    <h1 class="plan-title">
+                        <i class="bi bi-calendar-check"></i> Your Travel Plan
+                    </h1>
+                    <p class="plan-subtitle">
+                        Manage your saved locations and plan your next adventure
+                    </p>
+                </div>
+
+                {% if saved_locations %}
+                    <div class="row">
+                        <div class="col-lg-8">
+                            <h4 class="mb-3">
+                                <i class="bi bi-bookmark-star"></i> Saved Locations ({{ saved_locations.count }})
+                            </h4>
+                            
+                            {% for location in saved_locations %}
+                                <div class="saved-location-card">
+                                    <div class="location-header">
+                                        <div class="location-info">
+                                            <div class="location-name">{{ location.name }}</div>
+                                            <div class="location-address">
+                                                <i class="bi bi-geo-alt"></i> {{ location.address }}
+                                            </div>
+                                            <div class="location-meta">
+                                                {% if location.rating %}
+                                                    <div class="rating-badge">
+                                                        <i class="bi bi-star-fill text-warning"></i>
+                                                        {{ location.rating }} ({{ location.user_ratings_total|default:0 }} reviews)
+                                                    </div>
+                                                {% endif %}
+                                                {% if location.types %}
+                                                    {% for type in location.types|slice:":2" %}
+                                                        <div class="type-badge">{{ type }}</div>
+                                                    {% endfor %}
+                                                {% endif %}
+                                                <small class="text-muted">
+                                                    <i class="bi bi-clock"></i> Saved {{ location.saved_at|timesince }} ago
+                                                </small>
+                                            </div>
+                                        </div>
+                                        <div class="location-actions">
+                                            {% if location.latitude and location.longitude %}
+                                                <button class="btn-view-map" onclick="viewOnMap({{ location.latitude }}, {{ location.longitude }}, '{{ location.name }}')">
+                                                    <i class="bi bi-map"></i> View on Map
+                                                </button>
+                                            {% else %}
+                                                <span class="text-muted small">
+                                                    <i class="bi bi-info-circle"></i> No map location available
+                                                </span>
+                                            {% endif %}
+                                            <a href="{% url 'core:remove_saved_location' location.id %}" class="btn-remove" 
+                                               onclick="return confirm('Are you sure you want to remove {{ location.name }} from your plan?')">
+                                                <i class="bi bi-trash"></i> Remove
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        
+                        <div class="col-lg-4">
+                            <h4 class="mb-3">
+                                <i class="bi bi-map"></i> Map View
+                            </h4>
+                            <div id="map" class="map-container"></div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="empty-state">
+                        <i class="bi bi-bookmark"></i>
+                        <h3>No saved locations yet</h3>
+                        <p class="mb-4">
+                            Start exploring nearby places and save your favorite locations to build your travel plan.
+                        </p>
+                        <a href="{% url 'core:explore_nearby' %}" class="btn btn-primary btn-lg">
+                            <i class="bi bi-geo-alt"></i> Explore Nearby
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script>
+        {% if saved_locations %}
+            // Find first location with coordinates for map center
+            var mapCenter = [0, 0]; // Default center
+            {% for location in saved_locations %}
+                {% if location.latitude and location.longitude %}
+                    {% if forloop.first %}
+                        mapCenter = [{{ location.latitude }}, {{ location.longitude }}];
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
+            
+            // Initialize map
+            var map = L.map('map').setView(mapCenter, 12);
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+            
+            // Add markers for all saved locations with coordinates
+            {% for location in saved_locations %}
+                {% if location.latitude and location.longitude %}
+                    var marker = L.marker([{{ location.latitude }}, {{ location.longitude }}])
+                        .addTo(map)
+                        .bindPopup('<b>{{ location.name }}</b><br>{{ location.address }}');
+                {% endif %}
+            {% endfor %}
+            
+            function viewOnMap(lat, lng, name) {
+                map.setView([lat, lng], 16);
+                // Find and open the popup for this location
+                map.eachLayer(function(layer) {
+                    if (layer instanceof L.Marker) {
+                        var markerLat = layer.getLatLng().lat;
+                        var markerLng = layer.getLatLng().lng;
+                        if (markerLat === lat && markerLng === lng) {
+                            layer.openPopup();
+                        }
+                    }
+                });
+            }
+        {% endif %}
+    </script>
+</body>
+</html> 

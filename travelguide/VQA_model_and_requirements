@@ -1,0 +1,65 @@
+# Set environment variable before any imports
+import os
+os.environ['PYTORCH_ENABLE_MPS_FALLBACK'] = '1'
+
+# test.py
+import torch
+from PIL import Image
+from transformers import AutoModel, AutoTokenizer
+
+# Determine the best available device
+def get_device():
+    if torch.cuda.is_available():
+        return 'cuda'
+    elif torch.backends.mps.is_available():
+        return 'mps'
+    else:
+        return 'cpu'
+
+# Determine the best dtype for the device
+def get_dtype(device):
+    if device == 'cuda':
+        # Check if CUDA device supports bfloat16
+        if torch.cuda.is_available() and torch.cuda.get_device_capability()[0] >= 8:
+            return torch.bfloat16
+        else:
+            return torch.float16
+    elif device == 'mps':
+        return torch.float16
+    else:
+        return torch.float32
+
+device = get_device()
+dtype = get_dtype(device)
+
+print(f"Using device: {device} with dtype: {dtype}")
+
+model = AutoModel.from_pretrained('openbmb/MiniCPM-V-2', trust_remote_code=True, torch_dtype=dtype)
+model = model.to(device=device, dtype=dtype)
+
+tokenizer = AutoTokenizer.from_pretrained('openbmb/MiniCPM-V-2', trust_remote_code=True)
+model.eval()
+
+image = Image.open('/Users/divyansh/LLM_project/xparis_eiffeltower_ssk500.jpeg.pagespeed.ic.03Zne2dW2F.jpg').convert('RGB')
+question = 'What is the name of the landmark in the image?'
+msgs = [{'role': 'user', 'content': question}]
+
+res, context, _ = model.chat(
+    image=image,
+    msgs=msgs,
+    context=None,
+    tokenizer=tokenizer,
+    sampling=True,
+    temperature=0.7
+)
+print(res)
+
+# Requirements:
+# Pillow==10.1.0
+# timm==0.9.10
+# torch==2.1.2
+# torchvision==0.16.2
+# transformers==4.36.0
+# sentencepiece==0.1.99
+# peft==0.7.1
+# numpy<2.0.0

@@ -1,0 +1,37 @@
+{
+  "name": "Travel Guide App",
+  "description": "AI-powered travel guide with landmark identification and travel planning",
+  "repository": "https://github.com/yourusername/travel-guide-app",
+  "logo": "https://node-js-sample.herokuapp.com/node.png",
+  "keywords": ["django", "ai", "travel", "landmark", "machine-learning"],
+  "env": {
+    "SECRET_KEY": {
+      "description": "A secret key for Django",
+      "generator": "secret"
+    },
+    "DEBUG": {
+      "description": "Debug mode (set to False for production)",
+      "value": "False"
+    },
+    "ALLOWED_HOSTS": {
+      "description": "Comma-separated list of allowed hosts",
+      "value": "localhost,127.0.0.1"
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/python"
+    }
+  ],
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "addons": [
+    {
+      "plan": "heroku-postgresql:mini"
+    }
+  ]
+} 
