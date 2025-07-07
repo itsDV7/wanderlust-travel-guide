@@ -4,6 +4,8 @@ A comprehensive Django-based travel application that combines AI-powered landmar
 
 **Creator:** Divyansh Chaudhary, MCS from UIUC
 
+[![Travel Guide Tutorial](HomePage.png)](https://folge.me/g/shared/Ynj5NJWdyQezryd/travel-guide-tutorial)
+
 ## 🌟 Features
 
 ### 🎯 Core Functionality
